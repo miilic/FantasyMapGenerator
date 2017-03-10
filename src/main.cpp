@@ -36,22 +36,30 @@ void outputMap(gen::MapGenerator &map) {
     gen::config::print("Finished Generating map draw data in " +
                        gen::config::toString(timer.getTime()) + " seconds.\n");
 
-    std::string outfile = gen::config::outfile;
-    std::string outfileExt = gen::config::outfileExt;
-    #ifdef PYTHON_RENDERING_SUPPORTED
-        if (outfileExt != std::string(".png")) {
-            outfile += ".png";
-        }
+    if (gen::config::withSvgOutput)
+    {
+    	std::string svg_outfile = gen::config::outfile + ".svg";
+		timer.reset();
+		timer.start();
+		gen::config::print("Exporting map as svg...");
+		map.outputSvgData(svg_outfile);
+		timer.stop();
+		gen::config::print("Finished exporting to svg in " +
+						   gen::config::toString(timer.getTime()) + " seconds.\n");
 
+		gen::config::print("Wrote svg to file: " + svg_outfile);
+    }
+    #ifdef PYTHON_RENDERING_SUPPORTED
+    	std::string png_outfile = gen::config::outfile + ".png";
         timer.reset();
         timer.start();
         gen::config::print("Drawing map...");
-        gen::render::drawMap(drawdata, outfile);
+        gen::render::drawMap(drawdata, png_outfile);
         timer.stop();
         gen::config::print("Finished drawing map in " +
                            gen::config::toString(timer.getTime()) + " seconds.\n");
 
-        gen::config::print("Wrote map to image: " + outfile);
+        gen::config::print("Wrote map to image: " + png_outfile);
     #else
         if (outfileExt != std::string(".json")) {
             outfile += ".json";

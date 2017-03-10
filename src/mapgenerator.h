@@ -56,6 +56,7 @@ public:
     void outputVoronoiDiagram(std::string filename);
     void outputHeightMap(std::string filename);
     std::vector<char> getDrawData();
+    void outputSvgData(std::string filename);
 
     Extents2d getExtents();
     void setDrawScale(double scale);
@@ -249,6 +250,7 @@ private:
                                   VertexList &path);
 
     void _getLabelDrawData(std::vector<jsoncons::json> &data);
+    void _getLabelSvgData(std::vector<Label> &data);
     void _initializeLabels(std::vector<Label> &labels);
     void _initializeMarkerLabels(std::vector<Label> &labels);
     void _initializeAreaLabels(std::vector<Label> &labels);
@@ -266,6 +268,7 @@ private:
     Extents2d _getTextExtents(std::string text, dcel::Point pos);
     std::vector<Extents2d> _getCharacterExtents(std::string text, dcel::Point pos);
     jsoncons::json _getLabelJSON(LabelCandidate &label);
+    Label _getLabelSvg(LabelCandidate &label);
     dcel::Point _normalizeMapCoordinate(dcel::Point &p);
     dcel::Point _normalizeMapCoordinate(double x, double y);
     std::vector<LabelOffset> _getLabelOffsets(Label label, double radius);

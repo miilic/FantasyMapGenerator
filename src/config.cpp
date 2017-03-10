@@ -6,7 +6,7 @@ namespace config {
 unsigned int seed = 0;
 double resolution = 0.08;
 std::string outfileExt = ".png";
-std::string outfile = "output" + outfileExt;
+std::string outfile = "output";
 double erosionAmount = -1.0;
 int erosionIterations = 3;
 int numCities = -1;
@@ -23,6 +23,8 @@ bool enableCities = true;
 bool enableTowns = true;
 bool enableLabels = true;
 bool enableAreaLabels = true;
+bool withSvgOutput = false;
+bool enableSvgColors = false;
 bool verbose = false;
 
 void print(std::string msg) {
@@ -55,6 +57,8 @@ bool parseOptions(int argc, char **argv) {
         opts.nolabels     = arg_litn(NULL, "no-labels", 0, 1, "disable label drawing"),
         opts.noarealabels = arg_litn(NULL, "no-arealabels", 0, 1, "disable area label drawing"),
         opts.drawinfo     = arg_litn(NULL, "drawing-supported", 0, 1, "display whether drawing is supported and exit"),
+		opts.withsvg      = arg_litn(NULL, "with-svg", 0, 1, "additional output in svg format"),
+		opts.svgcolors    = arg_litn(NULL, "svg-colors", 0, 1, "enable colors in svg output"),
         opts.verbose      = arg_litn("v", "verbose", 0, 1, "output additional information to stdout"),
         opts.end          = arg_end(20)
     };
@@ -138,6 +142,8 @@ bool _setOptions(OptionArgs opts) {
     if (!_disableTowns(opts.notowns)) { return false; }
     if (!_disableLabels(opts.nolabels)) { return false; }
     if (!_disableAreaLabels(opts.noarealabels)) { return false; }
+    if (!_enableWithSvg(opts.withsvg)) { return false; }
+    if (!_enableSvgColors(opts.svgcolors)) { return false; }
     if (!_setVerbosity(opts.verbose)) { return false; }
 
     return true;
@@ -372,6 +378,22 @@ bool _disableLabels(arg_lit *nolabels) {
 bool _disableAreaLabels(arg_lit *noarealabels) {
     if (noarealabels->count > 0) {
         gen::config::enableAreaLabels = false;
+    }
+
+    return true;
+}
+
+bool _enableWithSvg(arg_lit *withsvg) {
+    if (withsvg->count > 0) {
+        gen::config::withSvgOutput = true;
+    }
+
+    return true;
+}
+
+bool _enableSvgColors(arg_lit *svgcolors) {
+    if (svgcolors->count > 0) {
+        gen::config::enableSvgColors = true;
     }
 
     return true;

@@ -32,6 +32,8 @@ struct OptionArgs {
     struct arg_lit *nolabels;
     struct arg_lit *noarealabels;
 	struct arg_lit *drawinfo;
+	struct arg_lit *withsvg;
+	struct arg_lit *svgcolors;
     struct arg_lit *verbose;
 	struct arg_end *end;
 };
@@ -56,6 +58,8 @@ extern bool enableCities;
 extern bool enableTowns;
 extern bool enableLabels;
 extern bool enableAreaLabels;
+extern bool withSvgOutput;
+extern bool enableSvgColors;
 extern bool verbose;
 
 template<class T>
@@ -88,6 +92,8 @@ bool _disableCities(arg_lit *nocities);
 bool _disableTowns(arg_lit *notowns);
 bool _disableLabels(arg_lit *nolabels);
 bool _disableAreaLabels(arg_lit *noarealabels);
+bool _enableWithSvg(arg_lit *withsvg);
+bool _enableSvgColors(arg_lit *svgcolors);
 bool _setVerbosity(arg_lit *verbose);
 
 }

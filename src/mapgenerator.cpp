@@ -364,6 +364,204 @@ std::vector<char> gen::MapGenerator::getDrawData() {
     return charvect;
 }
 
+void gen::MapGenerator::outputSvgData(std::string filename) {
+    if (!_isInitialized) {
+        throw std::runtime_error("MapGenerator must be initialized.");
+    }
+
+    if (!_isHeightMapEroded) {
+        erode(0.0);
+    }
+
+    std::vector<std::vector<double> > contourData;
+    if (_isContourEnabled) {
+        _getContourDrawData(contourData);
+        _contourData = contourData;
+    }
+
+    std::vector<std::vector<double> > riverData;
+    if (_isRiversEnabled) {
+        _getRiverDrawData(riverData);
+        _riverData = riverData;
+    }
+
+    std::vector<double> slopeData;
+    if (_isSlopesEnabled) {
+        _getSlopeDrawData(slopeData);
+    }
+
+    std::vector<double> cityData;
+    if (_isCitiesEnabled) {
+        _getCityDrawData(cityData);
+    }
+
+    std::vector<double> townData;
+    if (_isTownsEnabled) {
+        _getTownDrawData(townData);
+    }
+
+    std::vector<std::vector<double> > territoryData;
+    _getTerritoryDrawData(territoryData);
+    _borderData = territoryData;
+    if (!_isBordersEnabled) {
+        territoryData.clear();
+    }
+
+    std::vector<Label> labelData;
+    if (_isLabelsEnabled) {
+        _getLabelSvgData(labelData);
+    }
+
+    std::ofstream file(filename);
+
+    file << "<svg version='1.1' baseProfile='full' width='" << _imgwidth
+		 << "' height='" << _imgheight
+		 << "' xmlns='http://www.w3.org/2000/svg'>";
+
+    file << "<defs>";
+    file << "<filter x='0' y='0' width='1' height='1' id='solid'>";
+    file << "<feFlood flood-color='white' flood-opacity='0.7'/>";
+    file << "<feComposite in='SourceGraphic'/>";
+    file << "</filter>";
+	file << "</defs>";
+
+    if (slopeData.size() > 0)
+    {
+		file << "<path d='";
+		for (std::vector<double>::iterator it = slopeData.begin();
+			 it != slopeData.end();
+			 it+=4)
+		{
+			file << "M " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+			file << "L " << (*(it+2) * _imgwidth) << " " << (_imgheight - *(it+3) * _imgheight) << " ";
+		}
+		file << "' id='slope' stroke='grey' stroke-width='1' stroke-linecap='butt' fill='none' />";
+    }
+
+    if (territoryData.size() > 0)
+    {
+    	for (std::vector<std::vector<double> >::iterator it_path = territoryData.begin();
+    		 it_path != territoryData.end();
+    		 it_path++)
+		{
+    		if (it_path->size() > 0)
+    		{
+    			file << "<path d='";
+    			bool first = true;
+    			for (std::vector<double>::iterator it = it_path->begin();
+    				 it != it_path->end();
+    				 it+=2)
+    			{
+    				if (first)
+    				{
+        				file << "M " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+    					first = false;
+    				}
+    				else
+    				{
+        				file << "L " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+    				}
+    			}
+    			file << "' id='territory" << (it_path - territoryData.begin()) << "' "
+    				 << "stroke='" << (gen::config::enableSvgColors ? "red" : "black") << "'"
+					 << " stroke-width='2' stroke-linecap='round' stroke-dasharray='3,4' fill='none' />";
+    		}
+		}
+    }
+
+    if (riverData.size() > 0)
+	{
+		for (std::vector<std::vector<double> >::iterator it_path = riverData.begin();
+			 it_path != riverData.end();
+			 it_path++)
+		{
+			if (it_path->size() > 0)
+			{
+				file << "<path d='";
+				bool first = true;
+				for (std::vector<double>::iterator it = it_path->begin();
+					 it != it_path->end();
+					 it+=2)
+				{
+					if (first)
+					{
+						file << "M " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+						first = false;
+					}
+					else
+					{
+						file << "L " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+					}
+				}
+				file << "' id='river" << (it_path - riverData.begin()) << "' "
+					 << "stroke='" << (gen::config::enableSvgColors ? "blue" : "black") << "'"
+					 << " stroke-width='2' stroke-linecap='round' fill='none' />";
+			}
+		}
+	}
+
+    if (contourData.size() > 0)
+	{
+		for (std::vector<std::vector<double> >::iterator it_path = contourData.begin();
+			 it_path != contourData.end();
+			 it_path++)
+		{
+			if (it_path->size() > 0)
+			{
+				file << "<path d='";
+				bool first = true;
+				for (std::vector<double>::iterator it = it_path->begin();
+					 it != it_path->end();
+					 it+=2)
+				{
+					if (first)
+					{
+						file << "M " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+						first = false;
+					}
+					else
+					{
+						file << "L " << (*it * _imgwidth) << " " << (_imgheight - *(it+1) * _imgheight) << " ";
+					}
+				}
+				file << "' id='territory" << (it_path - contourData.begin()) << "' "
+					 << "stroke='black' stroke-width='3' stroke-linecap='round' fill='none' />";
+			}
+		}
+	}
+
+	for (std::vector<double>::iterator it = cityData.begin();
+		 it != cityData.end();
+		 it+=2)
+	{
+		file << "<circle id='city" << (it - cityData.begin())/2
+			 << "' cx='" << (*it * _imgwidth) << "' cy='" << (_imgheight - *(it+1) * _imgheight)
+			 << "' r='" << _cityMarkerRadius << "' stroke='black' stroke-width='5' fill='white' />";
+	}
+
+	for (std::vector<double>::iterator it = townData.begin();
+		 it != townData.end();
+		 it+=2)
+	{
+		file << "<circle id='town" << (it - townData.begin())/2
+			 << "' cx='" << (*it * _imgwidth) << "' cy='" << (_imgheight - *(it+1) * _imgheight)
+			 << "' r='" << _townMarkerRadius << "' stroke='black' stroke-width='1' fill='black' />";
+	}
+
+	for (std::vector<Label>::iterator it = labelData.begin();
+		 it != labelData.end();
+		 it++)
+	{
+		file << "<text filter='url(#solid)' id='label" << (it - labelData.begin())
+			 << "' x='" << (it->position.x * _imgwidth) << "' y='" << ((1 - it->position.y) * _imgheight)
+			 << "' font-family='" << it->fontface << "' font-size='" << it->fontsize << "' fill='black'>";
+		file << it->text;
+		file << "</text>";
+	}
+    file << "</svg>";
+    file.close();
+}
+
 Extents2d gen::MapGenerator::getExtents() {
     return _extents;
 }
@@ -1948,6 +2146,23 @@ void gen::MapGenerator::_getLabelDrawData(std::vector<jsoncons::json> &data) {
     }
 }
 
+void gen::MapGenerator::_getLabelSvgData(std::vector<Label> &data) {
+    std::vector<Label> labels;
+    _initializeLabels(labels);
+    if (labels.size() == 0) {
+        return;
+    }
+
+    _generateLabelPlacements(labels);
+
+    std::vector<jsoncons::json> jsondata;
+    for (unsigned int i = 0; i < labels.size(); i++) {
+        LabelCandidate label = labels[i].candidates[labels[i].candidateIdx];
+        label.baseScore = labels[i].score;
+        data.push_back(_getLabelSvg(label));
+    }
+}
+
 void gen::MapGenerator::_initializeLabels(std::vector<Label> &labels) {
     std::vector<Label> markerLabels;
     std::vector<Label> areaLabels;
@@ -2211,6 +2426,19 @@ jsoncons::json gen::MapGenerator::_getLabelJSON(LabelCandidate &label) {
     json["score"] = label.baseScore;
 
     return json;
+}
+
+gen::MapGenerator::Label gen::MapGenerator::_getLabelSvg(LabelCandidate &label)
+{
+    dcel::Point npos = _normalizeMapCoordinate(label.position);
+
+    Label result;
+    result.text = label.text;
+    result.fontface = label.fontface;
+    result.fontsize = label.fontsize;
+    result.position = npos;
+
+    return result;
 }
 
 dcel::Point gen::MapGenerator::_normalizeMapCoordinate(double x, double y) {
